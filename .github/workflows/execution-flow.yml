@@ -41,7 +41,8 @@ jobs:
         # run-testsステップの結果が 'failure'であることを比較している。
         # ifがtrueになれば、その下のステップが実行される。
 
-        # 質問: ${{ }}はつけなくていいの?
+        # if文では、${{ }} を省略できる。
+        # 本来は ${{ failure() && steps.run-tests.outcome == 'failure' }} 
         if: failure() && steps.run-tests.outcome == 'failure'
 
         # ステータスによるステップの制御
