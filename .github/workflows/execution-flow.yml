@@ -37,9 +37,19 @@ jobs:
         id: run-tests
         run: npm run test
       - name: Upload test report
+        # failure(): 前回のステップの終了ステータスが0(成功)以外の時にtrueになる。
         # run-testsステップの結果が 'failure'であることを比較している。
         # ifがtrueになれば、その下のステップが実行される。
-        if: steps.run-tests.outcome == 'failure'
+
+        # 質問: ${{ }}はつけなくていいの?
+        if: failure() && steps.run-tests.outcome == 'failure'
+
+        # ステータスによるステップの制御
+        # success(): 前回のステップの終了ステータスが0(成功)の時にtrueになる。
+        # failure(): 前回のステップの終了ステータスが0(成功)以外の時にtrueになる。
+        # cancelled(): ワークフローがキャンセルされた移行にtrueになる。
+        # always(): 失敗、成功、キャンセルされているに関わらず必ずtrueになる。
+        # ※前回のステップとは、直前のステップだけではないので、例えば2つ前のステップで失敗していても,failure()はtrueを返す。
         uses: actions/upload-artifact@v3
         with:
           name: test-report
