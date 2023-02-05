@@ -42,6 +42,9 @@ jobs:
         # continue-on-error: true は、jobとしての結果のステータスは成功として返す。
         # イメージとしては、成功扱いでエラーを上書きしているイメージ。なので、出力結果自体は赤色になっている。
         continue-on-error: true
+        # ※
+        # steps.<step_id>.conclusionは、 continue-on-error で結果を上書きした後の結果を返す。(success, failure, cancelled, skipped)
+        # steps.<step_id>.outcomeは、　continue-on-error を使っていたとしても、結果を上書きする前の結果を返す。(success, failure, cancelled, skipped)
         id: run-tests
         run: npm run test
       - name: Upload test report
