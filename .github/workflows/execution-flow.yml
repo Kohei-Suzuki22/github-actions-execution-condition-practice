@@ -14,9 +14,10 @@ jobs:
         id: cache
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
       - name: Lint code
         run: npm run lint
@@ -34,8 +35,8 @@ jobs:
         # ※ steps.cache.outputs.cache-hitのように、outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
         uses: actions/cache@v3
         with:
-          path: node-modules
-          key: npm-deps-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         # outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
         if: steps.cache.outputs.cache-hit != 'true'
@@ -75,8 +76,8 @@ jobs:
         id: cache
         uses: actions/cache@v3
         with:
-          path: node-modules
-          key: npm-deps-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
