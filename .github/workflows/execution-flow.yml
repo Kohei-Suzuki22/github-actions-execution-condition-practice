@@ -27,11 +27,18 @@ jobs:
         uses: actions/checkout@v3
       - name: Cache dependencies
         id: cache
+        # actions/cacheは、Outputsとして、cache-hit: boolean で返す。(キャッシュが存在したかどうか)
+        # つまり、本来は「"cache-hit=true" >> $GITHUB_OUTPUT」 と するものを自動でやってくれている。
+        # 使う側は、本来と同様に、steps.cache.outputs.cache-hit とアクセスすれば、キャッシュが存在したのかを取得できる。
+        # 公式 -> https://github.com/actions/cache
+        # ※ steps.cache.outputs.cache-hitのように、outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: node-modules
+          key: npm-deps-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
+        # outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
+        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
       - name: Test code
         id: run-tests
@@ -61,13 +68,17 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3
+        # github上で、キャッシュがない一番最初の実行時に、
+        # 例えば今回は、testジョブとlintジョブが並列だが、どちらかがキャッシュを保存することになる。だとしても、並列に進行しているためどちらも一番最初に限ってはそれを参照することはできない。
+        # github上で、キャッシュが存在する二回目移行の実行時には、どちらもキャッシュを参照することができる。
       - name: Cache dependencies
         id: cache
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: node-modules
+          key: npm-deps-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
       - name: Build website
         id: build-website
@@ -98,7 +109,7 @@ jobs:
       - name: Output information
         run: |
           echo "Something went wrong"
-          echo "${{ github }}"
+          echo "${{ toJSON(github) }}"
 
 
       
