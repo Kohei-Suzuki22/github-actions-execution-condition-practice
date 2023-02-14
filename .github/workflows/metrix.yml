@@ -1,0 +1,27 @@
+name: Matrix Demo
+on: push
+jobs:
+  build:
+    strategy:
+      # マトリクスを使って、実行したい複数バリエーションを指定できる。
+      # 指定するキーと値はすべて自由に指定できる。
+      # マトリクスの実行も並列実行となる。
+      matrix:
+        # 以下の場合は、ubuntu-latestでnode-version12,14,16をそれぞれ実行 + windows-latestでnode-version12,14,16をそれぞれ実行するので
+        # 2 ✖︎ 3 の 6jobが実行されることになる。
+        node-version: [12, 14, 16]
+        operating-system: [ubuntu-latest, windows-latest]
+    # matrixを使って動的に指定
+    runs-on: ${{ matrix.operating-system }}
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3s
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
+        with:
+          # matrixを使って動的に指定
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Project
+        run: npm run build
