@@ -2,6 +2,9 @@ name: Matrix Demo
 on: push
 jobs:
   build:
+    # jobレベルでcontinue-on-error: trueにすることで、マトリクスの一部のjobが失敗しても他のjobの実行は中断されない。
+    # これを入れないと、マトリクスの一部でjobが失敗したら、並列で動いていた他のjobも中断される。
+    continue-on-error: true
     strategy:
       # マトリクスを使って、実行したい複数バリエーションを指定できる。
       # 指定するキーと値はすべて自由に指定できる。
