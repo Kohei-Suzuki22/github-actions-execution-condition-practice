@@ -14,6 +14,19 @@ jobs:
         # 2 ✖︎ 3 の 6jobが実行されることになる。
         node-version: [12, 14, 16]
         operating-system: [ubuntu-latest, windows-latest]
+        # includeは、上に定義したmatrix(行列)の組み合わせに加え、新しい構成を追加する。
+        ## keyが存在しない場合(=元の組み合わせの一部を上書きせずに追加できる場合)、元のすべてのマトリクスに追加される。
+        ## keyとvalueが元の組み合わせに重複している場合、そのkeyとvalueが重複している元の組み合わせのみに、マージされる。
+        ## keyが存在していて、valueが存在していない場合、独立した新たな組み合わせとなる。
+        ## 公式 -> https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+        include:
+          - node-version: 18
+            operating-system: ubuntu-latest
+        # excludeは、マッチした要素を元のマトリクスから取り除く。
+        exclude:
+          - node-version: 12
+            operating-system: windows-latest
+
     # matrixを使って動的に指定
     runs-on: ${{ matrix.operating-system }}
     steps:
