@@ -1,0 +1,107 @@
+name: Website Deployment
+on:
+  push:
+    branches:
+      - main
+      - master
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Lint code
+        run: npm run lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        # actions/cacheは、Outputsとして、cache-hit: boolean で返す。(キャッシュが存在したかどうか)
+        # つまり、本来は「"cache-hit=true" >> $GITHUB_OUTPUT」 と するものを自動でやってくれている。
+        # 使う側は、本来と同様に、steps.cache.outputs.cache-hit とアクセスすれば、キャッシュが存在したのかを取得できる。
+        # 公式 -> https://github.com/actions/cache
+        # ※ steps.cache.outputs.cache-hitのように、outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        # outputされば出力を取得した際は、booleanではなく文字列になっているので注意。
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Test code
+        id: run-tests
+        run: npm run test
+      - name: Upload test report
+        # failure(): 前回のステップの終了ステータスが0(成功)以外の時にtrueになる。
+        # run-testsステップの結果が 'failure'であることを比較している。
+        # ifがtrueになれば、その下のステップが実行される。
+
+        # if文では、${{ }} を省略できる。
+        # 本来は ${{ failure() && steps.run-tests.outcome == 'failure' }}
+        if: failure() && steps.run-tests.outcome == 'failure'
+
+        # ステータスによるステップの制御
+        # success(): 前回のステップの終了ステータスが0(成功)の時にtrueになる。
+        # failure(): 前回のステップの終了ステータスが0(成功)以外の時にtrueになる。
+        # cancelled(): ワークフローがキャンセルされた移行にtrueになる。
+        # always(): 失敗、成功、キャンセルされているに関わらず必ずtrueになる。
+        # ※前回のステップとは、直前のステップだけではないので、例えば2つ前のステップで失敗していても,failure()はtrueを返す。
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: test.json
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+        # github上で、キャッシュがない一番最初の実行時に、
+        # 例えば今回は、testジョブとlintジョブが並列だが、どちらかがキャッシュを保存することになる。だとしても、並列に進行しているためどちらも一番最初に限ってはそれを参照することはできない。
+        # github上で、キャッシュが存在する二回目移行の実行時には、どちらもキャッシュを参照することができる。
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Build website
+        id: build-website
+        run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: distther
+  deploy:
+    needs: build
+    # usesは、jobの階層でも使える。
+    # usersに、再利用したいワークフローの相対パス(リポジトリ直下から)を指定することで使える。
+    # ワークフローの再利用は、別のリポジトリのワークフローでも使える。※ex:  ../anotherRepo/.github/workflows/hello.yml
+    uses: ./.github/workflows/reusable.yml
+  report:
+    needs: [lint, deploy]
+    # lintジョブとdeployジョブどちらかでも失敗した場合は、trueを返す。
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output information
+        run: |
+          echo "Something went wrong"
+          echo "${{ toJSON(github) }}"
