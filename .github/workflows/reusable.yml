@@ -1,10 +1,32 @@
 name: Reusable Deploy
 # workflow_call: 他のワークフローからこのワークフローを呼び出すことをトリガーに設定する。
-on: workflow_call
+on:
+  workflow_call:
+    # このワークフローがよばれる時の入力(引数的な？)を指定できる。
+    inputs:
+      # inputの名前
+      artifact-name:
+        # 説明
+        description: The name of the deployable artifact files
+        # trueの場合、このワークフローがよばれるときにinputを指定しなければエラーになる。
+        required: false
+        # デフォルト値
+        default: dist
+        # 入力値の型(ここでは、ファイル名の文字列が欲しいためstringを指定する。。)
+        # 指定できるtypeは、[string, boolean, number, choice]など。
+        type: string
 jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Get code
+        uses: actions/download-artifact@v3
+        with:
+          # このステップでダウンロードする内容を動的に指定する。
+          # トリガーで指定したinputsから取得する。
+          name: ${{ inputs.artifact-name }}
+      - name: Check download result
+        run: ls
       - name: Output information
         run: |
           echo "this is reusable.yml"
