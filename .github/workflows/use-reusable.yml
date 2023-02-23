@@ -98,6 +98,10 @@ jobs:
     with:
       # reusable.ymlのワークフローに対するinputを指定する。
       artifact-name: dist-files
+    # 再利用したいワークフロー内でシークレット変数を使いたい場合は、呼び出しもとファイル(このファイル)secretsを渡してあげる必要がある。
+    # secrets:
+    #   # some-secretという変数名で渡す。
+    #   some-secret: ${{ secrets.some-secret }}
   report:
     needs: [lint, deploy]
     # lintジョブとdeployジョブどちらかでも失敗した場合は、trueを返す。
