@@ -11,7 +11,7 @@ on:
         # trueの場合、このワークフローがよばれるときにinputを指定しなければエラーになる。
         required: false
         # デフォルト値
-        default: dist
+        default: dist-files
         # 入力値の型(ここでは、ファイル名の文字列が欲しいためstringを指定する。。)
         # 指定できるtypeは、[string, boolean, number, choice]など。
         type: string
