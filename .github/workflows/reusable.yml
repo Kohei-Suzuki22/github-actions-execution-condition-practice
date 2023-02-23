@@ -15,15 +15,24 @@ on:
         # 入力値の型(ここでは、ファイル名の文字列が欲しいためstringを指定する。。)
         # 指定できるtypeは、[string, boolean, number, choice]など。
         type: string
+    # このワークフローの呼び出し元のワークフローに値を渡すためのもの。(戻り値的な？)
+    outputs:
+      # 戻り値名
+      result:
+        # 戻り値の説明
+        description: The result of the deployment operation
+        value: ${{ jobs.deploy.outputs.return-outcome }}
     # このワークフローのように別のワークフローからよばれる場合において、シークレット変数を使いたい場合は、
     # 呼び出し元のワークフローからシークレット変数を渡してもらう必要がある。
     # secrets:
     #   # some-secretという変数名で受け取る。
-    #   some-secret: 
+    #   some-secret:
     #     # ※ requiredは指定できるが、defaultは指定できない。
     #     required: false
 jobs:
-  Deploy:
+  deploy:
+    outputs:
+      return-outcome: ${{ steps.set-result.outputs.step-result }}
     runs-on: ubuntu-latest
     steps:
       - name: Get code
@@ -38,3 +47,6 @@ jobs:
         run: |
           echo "this is reusable.yml"
           echo "Deploying & uploading..."
+      - name: set-result
+        id: set-result
+        run: echo "step-result=success" >> $GITHUB_OUTPUT
