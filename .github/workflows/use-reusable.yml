@@ -95,6 +95,9 @@ jobs:
     # usersに、再利用したいワークフローの相対パス(リポジトリ直下から)を指定することで使える。
     # ワークフローの再利用は、別のリポジトリのワークフローでも使える。※ex:  ../anotherRepo/.github/workflows/hello.yml
     uses: ./.github/workflows/reusable.yml
+    # reusable.ymlのワークフローに対するinputを指定する。
+    with:
+      artifact-name: dist-files
   report:
     needs: [lint, deploy]
     # lintジョブとdeployジョブどちらかでも失敗した場合は、trueを返す。
